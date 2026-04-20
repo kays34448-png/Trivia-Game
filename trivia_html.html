@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trivia Cultura General</title>
+  <meta name="description" content="Pon a prueba tu cultura general con 10 preguntas. ¡Juega gratis!" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #818cf8;
+      font-size: 22px;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    #game {
+      width: 100%;
+      max-width: 520px;
+    }
+    #progress-info {
+      display: flex;
+      justify-content: space-between;
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    #progress-bar-bg {
+      background: rgba(255,255,255,.15);
+      border-radius: 50px;
+      height: 6px;
+      margin-bottom: 20px;
+    }
+    #progress-bar {
+      background: #818cf8;
+      height: 100%;
+      border-radius: 50px;
+      width: 0%;
+      transition: width .4s;
+    }
+    #card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+    #question {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .opt {
+      display: block;
+      width: 100%;
+      background: #f8f8ff;
+      border: 2px solid #e0e0f0;
+      color: #333;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 15px;
+      text-align: left;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all .2s;
+    }
+    .opt:hover { border-color: #818cf8; background: #f0f0ff; }
+    .opt.correct { background: #dcfce7; border-color: #22c55e; color: #166534; }
+    .opt.wrong   { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+    #result { display: none; text-align: center; padding: 10px 0; }
+    #result .emoji { font-size: 64px; }
+    #result h2 { color: #1a1a2e; font-size: 24px; margin: 14px 0 6px; }
+    #result p { color: #555; font-size: 15px; }
+    #score-big { font-size: 56px; font-weight: 800; color: #4f46e5; margin: 10px 0; }
+    #result-bar-bg {
+      background: #f0f0f0;
+      border-radius: 50px;
+      height: 12px;
+      margin: 14px 0 20px;
+    }
+    #result-bar {
+      height: 100%;
+      border-radius: 50px;
+      width: 0%;
+      transition: width 1s;
+    }
+    #msg { font-size: 15px; color: #666; margin-bottom: 24px; }
+    #restart {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 40px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    #restart:hover { background: #4338ca; }
+    footer {
+      color: #555;
+      font-size: 12px;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 Trivia Cultura General</h1>
+  <div id="game">
+    <div id="progress-info">
+      <span id="q-num">Pregunta 1 de 10</span>
+      <span id="pts">⭐ 0 puntos</span>
+    </div>
+    <div id="progress-bar-bg"><div id="progress-bar"></div></div>
+    <div id="card">
+      <div id="question"></div>
+      <div id="options"></div>
+      <div id="result">
+        <div class="emoji" id="emoji"></div>
+        <h2>¡Juego terminado!</h2>
+        <p>Has respondido correctamente</p>
+        <div id="score-big"></div>
+        <div id="result-bar-bg"><div id="result-bar"></div></div>
+        <p id="msg"></p>
+        <button id="restart">Jugar de nuevo</button>
+      </div>
+    </div>
+  </div>
+  <footer>Hecho con ❤️ — Trivia Cultura General</footer>
+
+  <script>
+    const questions = [
+      { q: "¿Cuál es el océano más grande del mundo?", opts: ["Atlántico","Índico","Pacífico","Ártico"], a: 2 },
+      { q: "¿En qué año llegó el hombre a la Luna por primera vez?", opts: ["1965","1969","1972","1958"], a: 1 },
+      { q: "¿Cuántos países tiene la Unión Europea (2024)?", opts: ["25","27","30","28"], a: 1 },
+      { q: "¿Quién pintó La Gioconda (Mona Lisa)?", opts: ["Miguel Ángel","Rafael","Leonardo da Vinci","Botticelli"], a: 2 },
+      { q: "¿Cuál es el elemento químico con símbolo 'Au'?", opts: ["Plata","Aluminio","Oro","Cobre"], a: 2 },
+      { q: "¿Cuál es la capital de Australia?", opts: ["Sídney","Melbourne","Brisbane","Canberra"], a: 3 },
+      { q: "¿Cuántos huesos tiene el cuerpo humano adulto?", opts: ["196","206","216","186"], a: 1 },
+      { q: "¿Quién escribió 'Don Quijote de la Mancha'?", opts: ["Lope de Vega","Francisco de Quevedo","Miguel de Cervantes","Calderón de la Barca"], a: 2 },
+      { q: "¿Cuál es el planeta más grande del sistema solar?", opts: ["Saturno","Neptuno","Júpiter","Urano"], a: 2 },
+      { q: "¿En qué continente se encuentra Egipto?", opts: ["Asia","Europa","África","Oriente Medio"], a: 2 },
+    ];
+
+    let cur = 0, score = 0;
+
+    function load() {
+      const q = questions[cur];
+      document.getElementById("q-num").textContent = `Pregunta ${cur+1} de ${questions.length}`;
+      document.getElementById("pts").textContent = `⭐ ${score} puntos`;
+      document.getElementById("progress-bar").style.width = `${(cur/questions.length)*100}%`;
+      document.getElementById("question").textContent = q.q;
+      const opts = document.getElementById("options");
+      opts.innerHTML = "";
+      q.opts.forEach((txt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "opt";
+        btn.textContent = `${String.fromCharCode(65+i)}. ${txt}`;
+        btn.onclick = () => choose(i);
+        opts.appendChild(btn);
+      });
+    }
+
+    function choose(i) {
+      const btns = document.querySelectorAll(".opt");
+      btns.forEach(b => b.onclick = null);
+      if (i === questions[cur].a) { btns[i].classList.add("correct"); score++; }
+      else { btns[i].classList.add("wrong"); btns[questions[cur].a].classList.add("correct"); }
+      document.getElementById("pts").textContent = `⭐ ${score} puntos`;
+      setTimeout(() => {
+        cur++;
+        if (cur >= questions.length) showResult();
+        else load();
+      }, 900);
+    }
+
+    function showResult() {
+      document.getElementById("options").style.display = "none";
+      document.getElementById("question").style.display = "none";
+      const pct = Math.round((score / questions.length) * 100);
+      const bar = document.getElementById("result-bar");
+      bar.style.background = pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+      document.getElementById("result").style.display = "block";
+      document.getElementById("emoji").textContent = pct>=80?"🏆":pct>=50?"😊":"📚";
+      document.getElementById("score-big").textContent = `${score}/${questions.length}`;
+      document.getElementById("msg").textContent = pct===100?"¡Perfecto! Eres un genio.":pct>=80?"¡Excelente resultado!":pct>=50?"¡Buen intento! Sigue practicando.":"¡Sigue aprendiendo, tú puedes!";
+      setTimeout(() => bar.style.width = `${pct}%`, 100);
+      document.getElementById("restart").onclick = restart;
+    }
+
+    function restart() {
+      cur = 0; score = 0;
+      document.getElementById("result").style.display = "none";
+      document.getElementById("options").style.display = "block";
+      document.getElementById("question").style.display = "block";
+      document.getElementById("progress-bar").style.width = "0%";
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>
